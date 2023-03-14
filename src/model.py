@@ -1,14 +1,14 @@
 import random
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import cross_val_score, RepeatedStratifiedKFold, GridSearchCV, train_test_split
+from sklearn.model_selection import cross_val_score, RepeatedStratifiedKFold, GridSearchCV
 from sklearn.metrics import log_loss
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
 
-X = pd.read_csv("./data/X.csv").drop(["Unnamed: 0"], axis=1)
-Y = pd.read_csv("./data/Y.csv")["0"]
-X_train, y_train, X_test, y_test = fuc
-
-# X_test = pd.read_csv("./data/X-test.csv").drop(["Unnamed: 0"], axis=1)
+X = pd.read_csv("./src/data/X.csv").drop(["Unnamed: 0"], axis=1)
+Y = pd.read_csv("./src/data/Y.csv")["0"]
+X_test = pd.read_csv("./src/data/X-test.csv").drop(["Unnamed: 0"], axis=1)
 
 for i in range(int(X.shape[1] / 2)):
     X[str(i) + "_comb"] = X[str(2*i)] - X[str(2*i + 1)]
@@ -18,7 +18,7 @@ print(X.shape)
 print(X_test.shape)
 
 def run_grid_search(X, Y):
-    model = #TODO Define a model
+    model = AdaBoostClassifier()
     grid = dict()
     grid['n_estimators'] = [1000, 1500, 2000]
     grid['learning_rate'] = [0.00005, 0.0001, 0.00025, 0.0005]
@@ -36,7 +36,8 @@ def run_grid_search(X, Y):
     return grid_result.best_params_
 
 def fit_model(X, Y, params):
-    model = # TODO Define a model(s)
+    model = AdaBoostClassifier(base_estimator=params['base_estimator'], learning_rate=params['learning_rate'],
+                               n_estimators=params['n_estimators'])
     cv = RepeatedStratifiedKFold(n_splits=8, n_repeats=4, random_state=1)
 
     scores = cross_val_score(model, X, Y, scoring="accuracy", cv=cv, n_jobs=-1)
@@ -47,17 +48,17 @@ def fit_model(X, Y, params):
 
 def predict(X_test, model, title):
     preds = model.predict_proba(X_test)
-    preds_frame = pd.read_csv("./data/SampleSubmission2023.csv")
+    preds_frame = pd.read_csv("./src/data/SampleSubmission2023.csv")
     for i, row in preds_frame.iterrows():
         pred = preds[i][1]
-        preds_frame.at[i, "Pred"] = pred
+        preds_frame.loc[i, "Pred"] = pred
 
-    preds_frame.to_csv("./data/" + title + ".csv", index=False)
+    preds_frame.to_csv("./src/data/" + title + ".csv", index=False)
 
     return preds_frame
 
 def bracket(preds, title):
-    names = pd.read_csv("./data/MTeams.csv")
+    names = pd.read_csv("./src/data/MTeams.csv")
     mapped = pd.DataFrame(np.zeros((len(preds), 2))).astype("object")
     mapped.columns = ["ID", "Pred"]
     for i, row in preds.iterrows():
@@ -65,18 +66,18 @@ def bracket(preds, title):
         arr = string.split('_')
         t1 = names[names["TeamID"] == int(arr[1])]["TeamName"].to_numpy()[0]
         t2 = names[names["TeamID"] == int(arr[2])]["TeamName"].to_numpy()[0]
-        mapped.at[i, "ID"] = str(t1 + " vs. " + t2)
-        mapped.at[i, "Pred"] = row["Pred"]
-    mapped.to_csv("./data/" + title + ".csv", index=False)
+        mapped.loc[i, "ID"] = str(t1 + " vs. " + t2)
+        mapped.loc[i, "Pred"] = row["Pred"]
+    mapped.to_csv("./src/data/" + title + ".csv", index=False)
 
 def run_model():
     for i, row in X.iterrows():
         for j in range(int(len(row) * 2 / 3)):
-            X.iat[i, j] = np.log(X.iloc[i, j])
+            X.iloc[i, j] = np.log(X.iloc[i, j])
 
     for i, row in X_test.iterrows():
         for j in range(int(len(row) * 2 / 3)):
-            X_test.iat[i, j] = np.log(X_test.iloc[i, j])
+            X_test.iloc[i, j] = np.log(X_test.iloc[i, j])
 
     for i in range(9):
         X[str(i) + "_comb"] = X[str(2*i)] - X[str(2*i + 1)]

@@ -69,12 +69,13 @@ def get_test(systems):
     rankings = rankings[rankings["Season"] == 2022].reset_index(drop=True)
     seeds = dfs["MNCAATourneySeeds"][dfs["MNCAATourneySeeds"]["Season"] == 2022]
     X_test = pd.DataFrame(np.zeros((len(seeds["TeamID"]), 2 + 2 * len(systems))))
+    z = 0
     for i, row in preds_frame.iterrows():
         s = row["ID"]
         arr = s.split('_')
         team1 = arr[1]
         team2 = arr[2]
-        if (int(team1) in seeds["TeamID"]) & (int(team2) in seeds["TeamID"]):
+        if (int(team1) in seeds["TeamID"].to_list()) & (int(team2) in seeds["TeamID"].to_list()):
             team1_rankings = rankings[rankings["TeamID"] == int(team1)]
             team2_rankings = rankings[rankings["TeamID"] == int(team2)]
             seed1 = int(seeds[seeds["TeamID"] == int(team1)]["Seed"].to_numpy()[0][1:3])
@@ -96,8 +97,8 @@ def get_test(systems):
 
                 x += r1, r2
 
-                X_test.loc[i] = np.array(x)
-
+            X_test.loc[z] = np.array(x)
+            z += 1
     return X_test
 
 X, Y, systems = generate_dataset(dfs, 2003, 2022)
