@@ -1,12 +1,14 @@
 import random
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import cross_val_score, RepeatedStratifiedKFold, GridSearchCV
+from sklearn.model_selection import cross_val_score, RepeatedStratifiedKFold, GridSearchCV, train_test_split
 from sklearn.metrics import log_loss
 
 X = pd.read_csv("./data/X.csv").drop(["Unnamed: 0"], axis=1)
 Y = pd.read_csv("./data/Y.csv")["0"]
-X_test = pd.read_csv("./data/X-test.csv").drop(["Unnamed: 0"], axis=1)
+X_train, y_train, X_test, y_test = fuc
+
+# X_test = pd.read_csv("./data/X-test.csv").drop(["Unnamed: 0"], axis=1)
 
 for i in range(int(X.shape[1] / 2)):
     X[str(i) + "_comb"] = X[str(2*i)] - X[str(2*i + 1)]

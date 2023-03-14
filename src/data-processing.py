@@ -10,9 +10,11 @@ print(files)
 # Read data files into DataFrames
 dfs = {}
 for f in files:
-    dfs[f] = pd.read_csv(data_path + f + ".csv")
-
-def generate_dataset(start, end):
+    try:
+        dfs[f] = pd.read_csv(data_path + f + ".csv")
+    except UnicodeDecodeError:
+        dfs[f] = pd.read_csv(data_path + f + ".csv", sep=";", encoding='cp1252')
+def generate_dataset(dfs, start, end):
     first_season = start
     last_season = end
     seasons = range(first_season, last_season)
@@ -54,10 +56,10 @@ def generate_dataset(start, end):
             x1 += w, l
             x2 += l, w
 
-        X.at[2 * i] = np.array(x1)
-        X.at[2 * i + 1] = np.array(x2)
-        Y.at[2 * i ] = 1
-        Y.at[2 * i + 1] = 0
+        X.loc[2 * i, :] = np.array(x1)
+        X.loc[2 * i + 1, :] = np.array(x2)
+        Y.loc[2 * i] = 1
+        Y.loc[2 * i + 1] = 0
 
     return X, Y, systems
 
@@ -65,8 +67,8 @@ def get_test(systems):
     preds_frame = pd.read_csv("./data/SampleSubmission2023.csv")
     X_test = pd.DataFrame(np.zeros((len(preds_frame), 2 + 2 * len(systems))))
     rankings = dfs["MMasseyOrdinals"]
-    rankings = rankings[rankings["Season"] == 2021].reset_index(drop=True)
-    seeds = dfs["MNCAATourneySeeds"][dfs["MNCAATourneySeeds"]["Season"] == 2021]
+    rankings = rankings[rankings["Season"] == 2022].reset_index(drop=True)
+    seeds = dfs["MNCAATourneySeeds"][dfs["MNCAATourneySeeds"]["Season"] == 2022]
     for i, row in preds_frame.iterrows():
         s = row["ID"]
         arr = s.split('_')
@@ -93,11 +95,11 @@ def get_test(systems):
 
             x += r1, r2
 
-        X_test.at[i] = np.array(x)
+            X_test.loc[i] = np.array(x)
 
-    return X_test
+        return X_test
 
-X, Y, systems = generate_dataset(2003, 2022)
+X, Y, systems = generate_dataset(dfs, 2003, 2022)
 X.to_csv("./data/X.csv")
 Y.to_csv("./data/Y.csv")
 
