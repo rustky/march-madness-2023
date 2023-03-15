@@ -1,3 +1,4 @@
+import os
 import random
 import numpy as np
 import pandas as pd
@@ -6,9 +7,11 @@ from sklearn.metrics import log_loss
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
 
-X = pd.read_csv("./src/data/X.csv").drop(["Unnamed: 0"], axis=1)
-Y = pd.read_csv("./src/data/Y.csv")["0"]
-X_test = pd.read_csv("./src/data/X-test.csv").drop(["Unnamed: 0"], axis=1)
+current_dir = os.path.curdir
+
+X = pd.read_csv(current_dir + "/src/data/X.csv").drop(["Unnamed: 0"], axis=1)
+Y = pd.read_csv(current_dir + "/src/data/Y.csv")["0"]
+X_test = pd.read_csv(current_dir + "/src/data/X-test.csv").drop(["Unnamed: 0"], axis=1)
 
 for i in range(int(X.shape[1] / 2)):
     X[str(i) + "_comb"] = X[str(2*i)] - X[str(2*i + 1)]
@@ -48,17 +51,17 @@ def fit_model(X, Y, params):
 
 def predict(X_test, model, title):
     preds = model.predict_proba(X_test)
-    preds_frame = pd.read_csv("./src/data/SampleSubmission2023.csv")
+    preds_frame = pd.read_csv(current_dir + "/src/data/SampleSubmission2023.csv")
     for i, row in preds_frame.iterrows():
         pred = preds[i][1]
         preds_frame.loc[i, "Pred"] = pred
 
-    preds_frame.to_csv("./src/data/" + title + ".csv", index=False)
+    preds_frame.to_csv(current_dir + "/src/data/" + title + ".csv", index=False)
 
     return preds_frame
 
 def bracket(preds, title):
-    names = pd.read_csv("./src/data/MTeams.csv")
+    names = pd.read_csv(current_dir + "/src/data/MTeams.csv")
     mapped = pd.DataFrame(np.zeros((len(preds), 2))).astype("object")
     mapped.columns = ["ID", "Pred"]
     for i, row in preds.iterrows():

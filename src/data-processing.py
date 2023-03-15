@@ -2,9 +2,10 @@ from os import listdir
 from os.path import isfile, join
 import numpy as np
 import pandas as pd
-
+import os
 # Get data file names
-data_path = "./data/"
+current_dir = os.path.curdir
+data_path = current_dir + "/data/"
 files = [f[:-4] for f in listdir(data_path) if isfile(join(data_path, f))]
 print(files)
 # Read data files into DataFrames
@@ -64,7 +65,7 @@ def generate_dataset(dfs, start, end):
     return X, Y, systems
 
 def get_test(systems):
-    preds_frame = pd.read_csv("./data/SampleSubmission2023.csv")
+    preds_frame = pd.read_csv(current_dir + "/data/SampleSubmission2023.csv")
     rankings = dfs["MMasseyOrdinals"]
     rankings = rankings[rankings["Season"] == 2022].reset_index(drop=True)
     seeds = dfs["MNCAATourneySeeds"][dfs["MNCAATourneySeeds"]["Season"] == 2022]
@@ -75,35 +76,34 @@ def get_test(systems):
         arr = s.split('_')
         team1 = arr[1]
         team2 = arr[2]
-        if (int(team1) in seeds["TeamID"].to_list()) & (int(team2) in seeds["TeamID"].to_list()):
-            team1_rankings = rankings[rankings["TeamID"] == int(team1)]
-            team2_rankings = rankings[rankings["TeamID"] == int(team2)]
-            seed1 = int(seeds[seeds["TeamID"] == int(team1)]["Seed"].to_numpy()[0][1:3])
-            seed2 = int(seeds[seeds["TeamID"] == int(team2)]["Seed"].to_numpy()[0][1:3])
-            x = [seed1, seed2]
-            for sys in systems:
-                sys1 = team1_rankings[team1_rankings["SystemName"] == sys]
-                sys2 = team2_rankings[team2_rankings["SystemName"] == sys]
-                r1 = sys1[sys1["RankingDayNum"] == sys1["RankingDayNum"].max()]["OrdinalRank"].to_numpy()
-                if r1.size == 0:
-                    r1 = 50
-                else:
-                    r1 = r1[0]
-                r2 = sys2[sys2["RankingDayNum"] == sys2["RankingDayNum"].max()]["OrdinalRank"].to_numpy()
-                if r2.size == 0:
-                    r2 = 50
-                else:
-                    r2 = r2[0]
+        team1_rankings = rankings[rankings["TeamID"] == int(team1)]
+        team2_rankings = rankings[rankings["TeamID"] == int(team2)]
+        seed1 = int(seeds[seeds["TeamID"] == int(team1)]["Seed"].to_numpy()[0][1:3])
+        seed2 = int(seeds[seeds["TeamID"] == int(team2)]["Seed"].to_numpy()[0][1:3])
+        x = [seed1, seed2]
+        for sys in systems:
+            sys1 = team1_rankings[team1_rankings["SystemName"] == sys]
+            sys2 = team2_rankings[team2_rankings["SystemName"] == sys]
+            r1 = sys1[sys1["RankingDayNum"] == sys1["RankingDayNum"].max()]["OrdinalRank"].to_numpy()
+            if r1.size == 0:
+                r1 = 50
+            else:
+                r1 = r1[0]
+            r2 = sys2[sys2["RankingDayNum"] == sys2["RankingDayNum"].max()]["OrdinalRank"].to_numpy()
+            if r2.size == 0:
+                r2 = 50
+            else:
+                r2 = r2[0]
 
-                x += r1, r2
+            x += r1, r2
 
-            X_test.loc[z] = np.array(x)
-            z += 1
+        X_test.loc[z] = np.array(x)
+
     return X_test
 
 X, Y, systems = generate_dataset(dfs, 2003, 2022)
-X.to_csv("./data/X.csv")
-Y.to_csv("./data/Y.csv")
+X.to_csv(current_dir + "/data/X.csv")
+Y.to_csv(current_dir + "/data/Y.csv")
 
 X_test = get_test(systems)
-X_test.to_csv("./data/X-test.csv")
+X_test.to_csv(current_dir + "/data/X-test.csv")
